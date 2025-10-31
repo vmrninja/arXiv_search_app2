@@ -1,0 +1,58 @@
+╔══════════════════════════════════════════════════════╗
+║        arXiv Paper Search - QUICK START GUIDE        ║
+╚══════════════════════════════════════════════════════╝
+
+THE PROBLEM:
+Your "Load failed" error is caused by CORS - browsers block 
+direct API requests from local HTML files for security.
+
+THE FIX:
+Use the included Python backend server to handle API requests.
+
+═══════════════════════════════════════════════════════════
+
+🚀 HOW TO RUN (2 SIMPLE STEPS):
+
+STEP 1: Start the Backend Server
+─────────────────────────────────
+📁 Open a terminal/command prompt in this folder, then:
+
+   On Mac/Linux:
+   → ./start_server.sh
+   
+   On Windows:
+   → start_server.bat
+   
+   Or manually:
+   → python arxiv_server.py
+
+   Keep this terminal window OPEN!
+
+STEP 2: Open the Web App
+─────────────────────────
+📁 Open "arxiv-search.html" in your browser
+   (double-click it or drag into browser)
+
+That's it! The app should now work perfectly.
+
+═══════════════════════════════════════════════════════════
+
+📦 WHAT'S INCLUDED:
+
+✓ arxiv-search.html    → The web interface
+✓ arxiv_server.py      → Backend server (handles API calls)
+✓ start_server.sh      → Mac/Linux startup script
+✓ start_server.bat     → Windows startup script
+✓ README.md            → Full documentation
+
+═══════════════════════════════════════════════════════════
+
+❓ TROUBLESHOOTING:
+
+"Connection refused" → Server isn't running (do Step 1)
+"No Python found"    → Install Python 3 from python.org
+Port 5000 in use     → Change port in arxiv_server.py
+
+═══════════════════════════════════════════════════════════
+
+Need more help? Check README.md for detailed instructions!
