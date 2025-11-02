@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>arXiv Paper Search</title>
+        <!--
+                arXiv Search UI
+                -----------------
+                This file provides a minimal client-side UI for searching arXiv papers.
+                - The CSS below styles the page and results.
+                - The HTML body contains the search form, options, loading indicator and results container.
+                - The script at the bottom wires up the form submit to `searchArxiv()` which calls the
+                    local backend API at http://localhost:5000/api/search and renders results.
+                Keep JS logic simple and client-side only; the backend performs the actual arXiv queries.
+        -->
     <style>
         * {
             margin: 0;
@@ -47,6 +57,13 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             margin-bottom: 30px;
         }
+
+        /*
+            Layout notes:
+            - `.search-box` holds the search form and option controls.
+            - `.loading` is shown while waiting for the backend response.
+            - `.results` contains `.paper-card` entries rendered from the API response.
+        */
 
         .search-form {
             display: flex;
@@ -284,6 +301,11 @@
         </header>
 
         <div class="search-box">
+            <!-- Search form
+                 - The form element uses `submit` so pressing Enter or clicking the button triggers search.
+                 - The button is type="submit", which causes the form's submit event to fire.
+                 - Fields below the form control how the query is constructed (field, sort, max results).
+            -->
             <form class="search-form" id="searchForm">
                 <input 
                     type="text" 
@@ -334,6 +356,8 @@
     </div>
 
     <script>
+        // ======== Element references ========
+        // Cache references to DOM elements used by the script.
         const searchForm = document.getElementById('searchForm');
         const searchInput = document.getElementById('searchInput');
         const searchBtn = document.getElementById('searchBtn');
@@ -343,49 +367,70 @@
         const loadingIndicator = document.getElementById('loadingIndicator');
         const resultsContainer = document.getElementById('resultsContainer');
 
+        // ======== Event wiring ========
+        // The form's submit event is used rather than a button click. This ensures pressing Enter works.
+        // When the form is submitted we prevent the default page reload and run our async search function.
         searchForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await searchArxiv();
+            e.preventDefault(); // stop normal form submission/navigation
+            await searchArxiv(); // run the search and render results
         });
 
+        // ======== Main search function ========
+        /*
+            searchArxiv()
+            - Reads the query and option fields.
+            - Shows a loading indicator and disables the search button to prevent double submissions.
+            - Calls the local backend API at /api/search which performs the arXiv retrieval.
+            - Handles the API response: show results, a "no results" message, or an error.
+            - Always hides the loading indicator and re-enables the button in a finally block.
+            Notes on API contract expected from backend:
+            - Response is JSON with shape: { success: boolean, papers: Array, error?: string }
+        */
         async function searchArxiv() {
             const query = searchInput.value.trim();
-            if (!query) return;
+            if (!query) return; // nothing to search
 
             const field = searchField.value;
             const sort = sortBy.value;
             const max = maxResults.value;
 
-            // Show loading
+            // Show loading UI and clear any previous results
             loadingIndicator.style.display = 'block';
             resultsContainer.innerHTML = '';
             searchBtn.disabled = true;
 
             try {
-                // Use local backend server
+                // Build the backend query URL. Backend does the heavy lifting (calls arXiv API).
                 const apiUrl = `http://localhost:5000/api/search?query=${encodeURIComponent(query)}&field=${field}&sortBy=${sort}&maxResults=${max}`;
 
                 const response = await fetch(apiUrl);
                 const data = await response.json();
-                
+
+                // Backend communicates success via `data.success`.
                 if (!data.success) {
                     throw new Error(data.error || 'Search failed');
                 }
-                
+
+                // Render results or a no-results message.
                 if (data.papers.length === 0) {
                     displayNoResults();
                 } else {
                     displayResults(data.papers);
                 }
             } catch (error) {
+                // Any error (network, backend, parsing) is shown to the user.
                 displayError(error.message);
             } finally {
+                // Always hide loading and re-enable controls.
                 loadingIndicator.style.display = 'none';
                 searchBtn.disabled = false;
             }
         }
 
+        // Render an array of paper objects returned by the backend into HTML cards.
+        // Each paper is expected to have { title, summary, published, id, authors }
         function displayResults(papers) {
+            // Build the HTML for all papers and insert into the results container.
             const resultsHTML = papers.map(paper => {
                 const title = paper.title || 'No title';
                 const summary = paper.summary || 'No abstract available';
@@ -425,6 +470,7 @@
             resultsContainer.innerHTML = `<div class="results">${resultsHTML}</div>`;
         }
 
+        // Show a friendly message when the backend returns zero papers.
         function displayNoResults() {
             resultsContainer.innerHTML = `
                 <div class="no-results">
@@ -435,6 +481,7 @@
             `;
         }
 
+        // Display a simple error banner when something goes wrong.
         function displayError(message) {
             resultsContainer.innerHTML = `
                 <div class="error">
